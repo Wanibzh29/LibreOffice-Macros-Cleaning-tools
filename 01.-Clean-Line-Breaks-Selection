@@ -1,0 +1,73 @@
+Sub NettoyerSautsDeLigne_Selection
+    Dim oDoc As Object
+    Dim oSel As Object
+    Dim oTextRange As Object
+    Dim sTexte As String
+    Dim sNettoye As String
+    Dim nb1 As Long, nb2 As Long, nb3 As Long
+    Dim i As Long
+
+    oDoc = ThisComponent
+    oSel = oDoc.getCurrentSelection()
+
+    ' Vérifie qu'une sélection est active
+    If oSel.getCount() = 0 Then
+        MsgBox "Aucune sélection détectée.", 48, "Erreur"
+        Exit Sub
+    End If
+
+    ' On suppose que c’est du texte sélectionné
+    oTextRange = oSel.getByIndex(0)
+    sTexte = oTextRange.getString()
+
+    ' Initialisation des compteurs
+    nb1 = 0 ' Compteur pour les paragraphes créés (sauts de ligne doubles)
+    nb2 = 0 ' Compteur pour les fins de ligne supprimées
+    nb3 = 0 ' Compteur pour les doubles espaces supprimés
+
+    ' Étape 1 : compter les doubles sauts de ligne pour les paragraphes créés
+    Dim nbDoubleSauts As Long
+    nbDoubleSauts = CountOccurrences(sTexte, Chr(13) & Chr(13)) ' Comptage des doubles sauts de ligne
+    nb1 = nbDoubleSauts ' Les paragraphes créés correspondent au nombre de doubles sauts de ligne trouvés
+
+    ' Étape 2 : remplacer les doubles sauts de ligne par un seul
+    sNettoye = Replace(sTexte, Chr(13) & Chr(13), Chr(13)) ' Remplacement des doubles sauts de ligne
+    nb1 = CountOccurrences(sNettoye, Chr(13)) - nbDoubleSauts ' Calculer les paragraphes créés
+
+    ' Étape 3 : remplacer les sauts de ligne simples par un espace
+    Dim tempTexte As String
+    tempTexte = Replace(sNettoye, Chr(10), " ") ' Remplacer les fins de ligne simples par un espace
+    nb2 = CountOccurrences(sTexte, Chr(10)) ' Comptage des fins de ligne supprimées
+
+    ' Étape 4 : supprimer les doubles espaces
+    sNettoye = Replace(tempTexte, "  ", " ") ' Remplacer les doubles espaces par un espace unique
+    nb3 = CountOccurrences(tempTexte, "  ") ' Comptage des doubles espaces supprimés
+
+    ' Étape 5 : Supprimer toutes les occurrences de doubles espaces jusqu'à ce qu'il n'en reste plus
+    While InStr(sNettoye, "  ") > 0
+        sNettoye = Replace(sNettoye, "  ", " ")
+    Wend
+
+    ' Réécrire le texte nettoyé dans la sélection
+    oTextRange.setString(sNettoye)
+
+    ' Résumé
+    MsgBox "Nettoyage de la sélection terminé !" & Chr(10) & _
+           "Paragraphes recréés avec succès !" & Chr(10) & _
+           "Fins de ligne supprimées : " & nb2 & Chr(10) & _
+           "Doubles espaces supprimés : " & nb3, 64, "Traitement terminé"
+End Sub
+
+' Fonction utilitaire pour compter les occurrences d'une chaîne dans un texte
+Function CountOccurrences(ByVal sText As String, ByVal sPattern As String) As Long
+    Dim i As Long
+    i = 0
+    Dim pos As Long
+    pos = InStr(1, sText, sPattern) ' Commencer à la position 1
+    While pos > 0
+        i = i + 1
+        pos = InStr(pos + 1, sText, sPattern) ' Rechercher à partir de la position suivante
+    Wend
+    
+    CountOccurrences = i
+End Function
