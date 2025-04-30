@@ -1,0 +1,45 @@
+Sub ReformaterTexteDepuisEmailPDF()
+    Dim oDoc As Object
+    Dim oParEnum As Object
+    Dim oPar As Object
+    Dim sTexteParagraphe As String
+    Dim oReplace As Object
+    Dim nbParagraphes As Long
+    Dim nbLignesSupprimees As Long
+
+    oDoc = ThisComponent
+    oParEnum = oDoc.Text.createEnumeration()
+    nbParagraphes = 0
+    nbLignesSupprimees = 0
+
+    While oParEnum.hasMoreElements()
+        oPar = oParEnum.nextElement()
+        If oPar.supportsService("com.sun.star.text.Paragraph") Then
+            nbParagraphes = nbParagraphes + 1
+            sTexteParagraphe = oPar.getString()
+
+            ' Remplacer les sauts de ligne (\n ou \r) à l'intérieur du paragraphe par des espaces
+            oReplace = oDoc.createReplaceDescriptor()
+            With oReplace
+                .SearchString = "[\n\r]+" ' Recherche d'un ou plusieurs sauts de ligne ou retours chariot
+                .ReplaceString = " "
+                .setPropertyValue("SearchRegularExpression", True)
+            End With
+            sTexteParagraphe = oDoc.replaceAll(oReplace, oPar) ' Appliquer le remplacement uniquement au paragraphe actuel
+            nbLignesSupprimees = nbLignesSupprimees + (Len(oPar.getString()) - Len(sTexteParagraphe)) ' Suivre les suppressions (approximation)
+
+            ' Supprimer les espaces multiples qui pourraient résulter du remplacement
+            oReplace = oDoc.createReplaceDescriptor()
+            With oReplace
+                .SearchString = " +" ' Recherche d'un ou plusieurs espaces
+                .ReplaceString = " "
+                .setPropertyValue("SearchRegularExpression", True)
+            End With
+            oDoc.replaceAll(oReplace, oPar) ' Appliquer le remplacement uniquement au paragraphe actuel
+        End If
+    Wend
+
+    MsgBox "Reformatage terminé !" & Chr(10) & _
+         "Traitement terminé !"
+
+End Sub
