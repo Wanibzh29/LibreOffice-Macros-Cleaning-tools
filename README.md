@@ -1,4 +1,4 @@
-# LibreOffice-Macros-Cleaning-tool
+# LibreOffice-Macros-Cleaning-tools
 A collection of little macros to clean the documents.
 
 ## I. Copyrights
